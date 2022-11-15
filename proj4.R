@@ -16,13 +16,13 @@ hess_pd <- function(hess)
   R <- try(chol(hess), silent = TRUE) # try to decompose the matrix by Cholesky decomposition
   if(inherits(R, "try-error")) # if decomposition fails
   {
-    multiple <- 1e-6 + norm(hess)
-    hess <- hess + multiple*diag(dim(hess)[1])
+    multiplier <- 1e-6 + norm(hess)
+    hess <- hess + multiplier*diag(length(theta))
     R <- try(chol(hess))
     while(inherits(R, "try-error"))
     {
-      multiple <- multiple*10
-      hess <- hess + multiple*diag(dim(hess)[1])
+      multiplier <- multiple*10
+      hess <- hess + multiplier*diag(length(theta))
       R <- try(chol(hess))
     }
   }
@@ -41,13 +41,11 @@ newt <- function(theta, func, grad, hess, k=2, tol=1e-8, fscale=1, maxit=100, ma
   while(iter <= maxit)
   {
     if (is.null(hess)){
-      hess <- hess_fd(theta) # the finite difference approximation to hessian matrix  
-      hess <- (t(hess) + hess)/2
+      hm <- hess_fd(theta) # the finite difference approximation to hessian matrix  
+      hm <- (t(hm) + hm)/2
     }
-    else{
-      hess <- hess(theta)
-    }
-    hess_pd <- hess_pd(hess) # check if hessian matrix is positive definite
+    else {hm <- hess(theta)}
+    hess_pd <- hess_pd(hm) # check if hessian matrix is positive definite
   
     dd <- backsolve(hess_pd$R, forwardsolve(t(hess_pd$R), -grad(theta)))
     halve_times <- 1 # count for number of times halving the descent direction
@@ -68,20 +66,20 @@ newt <- function(theta, func, grad, hess, k=2, tol=1e-8, fscale=1, maxit=100, ma
       g <- grad(theta)
       
       if (is.null(hess)){
-        hess <- hess_fd(theta) # the finite difference approximation to hessian matrix  
-        hess <- (t(hess) + hess)/2
+        hm <- hess_fd(theta) # the finite difference approximation to hessian matrix  
+        hm <- (t(hm) + hm)/2
       }
       else{
-        hess <- hess(theta)
+        hm <- hess(theta)
       }
-      hess_pd <- hess_pd(hess) # check if hessian matrix is positive definite
-      if (hess_pd == hess){
-        Hi <- backsolve(hess_pd$R, forwardsolve(t(hess_pd$R), diag(dim(hess_pd)[1])))
-        newton <- list(f = f, theta = theta, iter = iter, g = g, Hi = Hi)
+      hess_pd <- hess_pd(hm) # check if hessian matrix is positive definite
+      if (hess_pd == hm){
+        Hi <- backsolve(hess_pd$R, forwardsolve(t(hess_pd$R), diag(length(theta))))
+        newton <- list("f" = f, "theta" = theta, "iter" = iter, "g" = g, "Hi" = Hi)
         return(newton)
       }
       else{
-        newton <- list(f = f, theta = theta, iter = iter, g = g)
+        newton <- list("f" = f, "theta" = theta, "iter" = iter, "g" = g)
         return(newton)
         warning("Hessian matrix is not positive definite", call. = FALSE)
       }
@@ -113,5 +111,5 @@ hb <- function(th, k=2){
   h
 }
 
-print(newt(c(10, 0.1), func=rb, grad=gb, hess=hb))
+print(newt(theta=c(10, 0.1), func=rb, grad=gb, hess=hb))
 
