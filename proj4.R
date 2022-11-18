@@ -16,11 +16,11 @@
 # Newton’s method minimises successive quadratic approximations (formula in 'newt')
 # to the objective function, D 
 # The parameters are initially guessed, which lead to finding the quadratic function 
-# matching D, the gradient vector and The Hessian matrix at that guess. 
+# matching D, the gradient vector and the Hessian matrix at that guess. 
 # The quadratic is minimised to find an improved guess and to update the hessian matrix
 # until we find a guess at the parameters which leads to gradient = 0
-# The condition that the gradient vector must be zero and the 
-# Hessian matrix has to be positive definite must be satisfied to find the minimum.
+# The conditions that the gradient vector must be zero and the 
+# hessian matrix has to be positive definite must be satisfied to find the minimum.
 # To avoid the possibility of divergence, D is checked on whether it is reduced
 # at each step. 
 # If D is not reduced, the algorithm backtracks to the previous value to find a 
@@ -37,52 +37,8 @@
 # If the initial guess does not lead to non-finite D or gradient, 
 # 'newt' will always return the estimates
 # warnings are issued to inform user when the returned value is far 
-# from supposed minimum, the warnings are disccussed further in 'newt' 
+# from supposed minimum, the warnings are discussed further in 'newt' 
 #################
-
-
-
-
-
-rb <- function(th,k=2) {
-  k*(th[2]-(th[1])^2)^2 + (1-th[1])^2 
-}
-
-gb <- function(th,k=2) {
-  c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
-}
-
-hb <- function(th,k=2) {
-  h <- matrix(0,2,2)
-  h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
-  h[2,2] <- 2*k
-  h[1,2] <- h[2,1] <- -4*k*th[1]
-  h
-}
-
-f <- function(th, k = 2)
-{
-  (th[1])^2 + th[1]*k
-}
-
-g <- function(th, k = 2)
-{
-  2*th[1] + k
-}
-
-theta <- c(10)
-diag(length(theta))
-
-newt(c(10),f,g,hess=hb,k = 3,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6)
-
-
-
-## loop over parameters
-for (i in 1:length(theta)) { 
-  theta1 <- theta; theta1[i] <- theta1[i] + eps ## increase theta[i] by eps
-  g1 <- grad(theta1,...) ## compute resulting gradient
-  h[i,] <- (g1 - g0)/eps ## approximate second derivatives
-}
 
 
 newt <- function(theta,func,grad,hess=NULL,...,
@@ -144,7 +100,6 @@ newt <- function(theta,func,grad,hess=NULL,...,
         g1 <- grad(theta1,...) ## compute resulting gradient
         h[i,] <- (g1 - g0)/eps ## approximate second derivatives
       }
-      
     }
     else {h <- hess(theta,...)} #If it is provided, define the current hessian as h.
     hf <- h #As we may need to perturb h to be positive definite, defining another
@@ -157,8 +112,6 @@ newt <- function(theta,func,grad,hess=NULL,...,
       while(inherits(R, "try-error")) # if it fails again, we keep on perturbing
         #until the hessian becomes positive definite.
       {
-        print(h)
-        print(diag(length(theta)))
         h <- h + diag(length(theta))*multiplier #Perturbing by multiplying with multiplier.
         R <- try(chol(h), silent = TRUE) #Checking positive definiteness again, which will be
         #the argument inside of the while loop.
@@ -222,15 +175,3 @@ newt <- function(theta,func,grad,hess=NULL,...,
   # Returning estimations
   return(list("f"=f,"theta"=theta, "iter"=iter, "g"=g, "Hi"=Hi)) 
 }
-
-theta <- c(1,100)
-n1 <- newt(theta,rb,gb,hess=hb,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6)
-n2 <- newt(theta,rb,gb,hess=NULL,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6)
-system.time(newt(theta,rb,gb,hess=hb,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6))
-
-
-
-
-installed.packages(priority="base")
-
-installed.packages(priority="recommended")
