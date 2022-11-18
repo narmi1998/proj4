@@ -62,7 +62,7 @@ hb <- function(th,k=2) {
 
 f <- function(th, k = 2)
 {
-  (th[1])^2 + th*k
+  (th[1])^2 + th[1]*k
 }
 
 g <- function(th, k = 2)
